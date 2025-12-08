@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:test_effective_mobile/bloc/bloc.dart';
-import 'package:test_effective_mobile/bloc/event.dart';
-import 'package:test_effective_mobile/bloc/state.dart';
+import 'package:test_effective_mobile/bloc/character_bloc/character_bloc.dart';
+import 'package:test_effective_mobile/bloc/character_bloc/character_event.dart';
+import 'package:test_effective_mobile/bloc/character_bloc/character_state.dart';
 import 'package:test_effective_mobile/views/character_card.dart';
 
 class AllCharacters extends StatefulWidget {
   const AllCharacters({super.key});
 
   @override
-  _AllCharactersState createState() => _AllCharactersState();
+  AllCharactersState createState() => AllCharactersState();
 }
 
-class _AllCharactersState extends State<AllCharacters> {
+class AllCharactersState extends State<AllCharacters> {
   final ScrollController _scrollController = ScrollController();
   static const String _pageStorageKey = 'all_characters_scroll';
 
@@ -47,7 +47,11 @@ class _AllCharactersState extends State<AllCharacters> {
 
         // Если идет первая загрузка и список пустой
         if (characterState.isLoading && characterState.characters.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          );
         }
 
         // Основной список
@@ -61,9 +65,13 @@ class _AllCharactersState extends State<AllCharacters> {
           itemBuilder: (context, index) {
             if (index == characterState.characters.length) {
               if (characterState.isLoading) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Center(child: CircularProgressIndicator()),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
                 );
               }
               return const SizedBox();
@@ -77,6 +85,7 @@ class _AllCharactersState extends State<AllCharacters> {
                   ),
                 );
               },
+              withPulseAnimation: true,
             );
           },
         );

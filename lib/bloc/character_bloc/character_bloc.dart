@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:developer';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:test_effective_mobile/bloc/event.dart';
-import 'package:test_effective_mobile/bloc/state.dart';
+import 'package:test_effective_mobile/bloc/character_bloc/character_event.dart';
+import 'package:test_effective_mobile/bloc/character_bloc/character_state.dart';
 import 'package:test_effective_mobile/models/character.dart';
 import 'package:test_effective_mobile/rest/rest.dart';
 import 'package:test_effective_mobile/services/cache_service.dart';

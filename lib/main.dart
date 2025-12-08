@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:test_effective_mobile/bloc/bloc.dart';
+import 'package:test_effective_mobile/bloc/character_bloc/character_bloc.dart';
+import 'package:test_effective_mobile/bloc/theme_bloc/theme_bloc.dart';
+import 'package:test_effective_mobile/bloc/theme_bloc/theme_state.dart';
 import 'package:test_effective_mobile/router_config/router.dart';
 
 void main() {
@@ -12,11 +14,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => CharacterBloc(),
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        routerConfig: RoutesConfig.router,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => CharacterBloc()),
+        BlocProvider(create: (context) => ThemeBloc()),
+      ],
+      child: BlocBuilder<ThemeBloc, ThemeState>(
+        builder: (context, themeState) {
+          return MaterialApp.router(
+            debugShowCheckedModeBanner: false,
+            routerConfig: RoutesConfig.router,
+            theme: themeState.themeData,
+          );
+        },
       ),
     );
   }

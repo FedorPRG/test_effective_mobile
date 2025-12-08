@@ -4,19 +4,24 @@ import 'package:test_effective_mobile/models/character.dart';
 
 class CharacterCard extends StatelessWidget {
   final Character character;
-  final Function clickFavorite;
+  final VoidCallback clickFavorite;
+  final bool withPulseAnimation;
 
   const CharacterCard({
     super.key,
     required this.character,
     required this.clickFavorite,
+    this.withPulseAnimation = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
+      color: theme.cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -36,19 +41,22 @@ class CharacterCard extends StatelessWidget {
                   placeholder: (context, url) => Container(
                     width: 100,
                     height: 100,
-                    color: Colors.grey[200],
-                    child: const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                    color: theme.colorScheme.surface.withValues(alpha: 0.5),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                   ),
                   errorWidget: (context, url, error) => Container(
                     width: 100,
                     height: 100,
-                    color: Colors.grey[300],
-                    child: const Icon(
+                    color: theme.colorScheme.surface,
+                    child: Icon(
                       Icons.person,
                       size: 40,
-                      color: Colors.grey,
+                      color: theme.disabledColor,
                     ),
                   ),
                 ),
@@ -64,9 +72,10 @@ class CharacterCard extends StatelessWidget {
                   // Имя
                   Text(
                     character.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -80,7 +89,12 @@ class CharacterCard extends StatelessWidget {
                       // Индикатор статуса
                       Text(
                         'status - ${character.status}',
-                        style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.7,
+                          ),
+                          fontSize: 14,
+                        ),
                       ),
                       const SizedBox(width: 6),
                       Container(
@@ -97,21 +111,27 @@ class CharacterCard extends StatelessWidget {
                   // Вид
                   Text(
                     'species - ${character.species}',
-                    style: TextStyle(color: Colors.grey[700], fontSize: 14),
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                      fontSize: 14,
+                    ),
                   ),
 
                   // Пол
                   Text(
                     'Gender: ${character.gender}',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      fontSize: 14,
+                    ),
                   ),
 
                   // ID персонажа
                   const SizedBox(height: 4),
                   Text(
                     'ID: ${character.id}',
-                    style: const TextStyle(
-                      color: Colors.blue,
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -120,17 +140,34 @@ class CharacterCard extends StatelessWidget {
               ),
             ),
 
-            // Кнопка "звездочка" для избранного
-            IconButton(
-              onPressed: () {
-                clickFavorite();
-              },
-              icon: Icon(
-                character.isFavorite ? Icons.star : Icons.star_border,
-                color: Colors.amber,
-                size: 38,
+            // Кнопка "звездочка"
+            if (withPulseAnimation)
+              // Для AllCharacters - с анимацией переключения
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, animation) {
+                  return ScaleTransition(scale: animation, child: child);
+                },
+                child: IconButton(
+                  key: ValueKey(character.isFavorite),
+                  onPressed: clickFavorite,
+                  icon: Icon(
+                    character.isFavorite ? Icons.star : Icons.star_border,
+                    color: Colors.amber,
+                    size: 38,
+                  ),
+                ),
+              )
+            else
+              // Для Favorites - без анимации
+              IconButton(
+                onPressed: clickFavorite,
+                icon: Icon(
+                  character.isFavorite ? Icons.star : Icons.star_border,
+                  color: Colors.amber,
+                  size: 38,
+                ),
               ),
-            ),
           ],
         ),
       ),

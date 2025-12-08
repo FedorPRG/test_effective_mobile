@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:test_effective_mobile/bloc/bloc.dart';
-import 'package:test_effective_mobile/bloc/event.dart';
-import 'package:test_effective_mobile/bloc/state.dart';
+import 'package:test_effective_mobile/bloc/character_bloc/character_bloc.dart';
+import 'package:test_effective_mobile/bloc/character_bloc/character_event.dart';
+import 'package:test_effective_mobile/bloc/character_bloc/character_state.dart';
 import 'package:test_effective_mobile/models/character.dart';
 import 'package:test_effective_mobile/views/character_card.dart';
 
@@ -10,34 +12,70 @@ class Favorites extends StatefulWidget {
   const Favorites({super.key});
 
   @override
-  _FavoritesState createState() => _FavoritesState();
+  FavoritesState createState() => FavoritesState();
 }
 
-class _FavoritesState extends State<Favorites> {
+class FavoritesState extends State<Favorites> {
   String _currentSort = 'id';
   bool _ascending = true;
   final ScrollController _scrollController = ScrollController();
   static const String _pageStorageKey = 'favorites_scroll';
 
+  // Для анимации удаления
+  final Set<int> _removingItems = {};
+  // Добавляем список таймеров для отслеживания
+  final Map<int, Timer> _removalTimers = {};
+
   @override
   void dispose() {
+    // Отменяем все активные таймеры
+    for (final timer in _removalTimers.values) {
+      timer.cancel();
+    }
+    _removalTimers.clear();
     _scrollController.dispose();
     super.dispose();
   }
 
+  void _animateRemoval(int characterId) {
+    setState(() {
+      _removingItems.add(characterId);
+    });
+    // Отменяем предыдущий таймер для этого персонажа, если он существует
+    _removalTimers[characterId]?.cancel();
+
+    // Создаем новый таймер с возможностью отмены
+    final timer = Timer(const Duration(milliseconds: 600), () {
+      if (mounted) {
+        setState(() {
+          _removingItems.remove(characterId);
+          _removalTimers.remove(characterId); // Очищаем ссылку
+        });
+      }
+    });
+    _removalTimers[characterId] = timer;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          color: Colors.grey[100],
+          color: theme.colorScheme.surface,
           child: Row(
             children: [
-              const Text('Сортировка:'),
+              Text(
+                'Сортировка:',
+                style: TextStyle(color: theme.colorScheme.onSurface),
+              ),
               const SizedBox(width: 8),
               DropdownButton<String>(
                 value: _currentSort,
+                dropdownColor: theme.cardColor,
+                style: TextStyle(color: theme.colorScheme.onSurface),
                 onChanged: (String? newValue) {
                   if (newValue != null) {
                     setState(() {
@@ -54,15 +92,20 @@ class _FavoritesState extends State<Favorites> {
                 ],
               ),
               const Spacer(),
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    _ascending = !_ascending;
-                  });
-                },
-                icon: Icon(
-                  _ascending ? Icons.arrow_upward : Icons.arrow_downward,
-                  color: Colors.blue,
+              // Анимированная кнопка сортировки
+              AnimatedRotation(
+                duration: const Duration(milliseconds: 300),
+                turns: _ascending ? 0 : 0.5,
+                child: IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _ascending = !_ascending;
+                    });
+                  },
+                  icon: Icon(
+                    Icons.arrow_upward,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
               ),
             ],
@@ -106,15 +149,22 @@ class _FavoritesState extends State<Favorites> {
 
               // Обработка пустого списка
               if (favoriteCharacters.isEmpty) {
-                return const Center(
+                return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.star_border, size: 64, color: Colors.grey),
-                      SizedBox(height: 16),
+                      Icon(
+                        Icons.star_border,
+                        size: 64,
+                        color: theme.disabledColor,
+                      ),
+                      const SizedBox(height: 16),
                       Text(
                         'Нет избранных персонажей',
-                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: theme.disabledColor,
+                        ),
                       ),
                     ],
                   ),
@@ -128,15 +178,30 @@ class _FavoritesState extends State<Favorites> {
                 padding: const EdgeInsets.all(16),
                 itemCount: favoriteCharacters.length,
                 itemBuilder: (context, index) {
-                  return CharacterCard(
-                    character: favoriteCharacters[index],
-                    clickFavorite: () {
-                      context.read<CharacterBloc>().add(
-                        CharacterClickFavorite(
-                          idCharacter: favoriteCharacters[index].id,
-                        ),
-                      );
-                    },
+                  final character = favoriteCharacters[index];
+                  final isRemoving = _removingItems.contains(character.id);
+
+                  // анимация исчезновения
+                  return AnimatedOpacity(
+                    duration: const Duration(milliseconds: 600),
+                    opacity: isRemoving ? 0 : 1,
+                    child: CharacterCard(
+                      character: character,
+                      clickFavorite: () {
+                        // Запускаем анимацию
+                        _animateRemoval(character.id);
+
+                        // Удаляем через небольшую задержку для анимации
+                        Future.delayed(const Duration(milliseconds: 400), () {
+                          if (mounted) {
+                            context.read<CharacterBloc>().add(
+                              CharacterClickFavorite(idCharacter: character.id),
+                            );
+                          }
+                        });
+                      },
+                      withPulseAnimation: false,
+                    ),
                   );
                 },
               );
