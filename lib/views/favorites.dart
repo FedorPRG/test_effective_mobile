@@ -20,6 +20,12 @@ class _FavoritesState extends State<Favorites> {
   static const String _pageStorageKey = 'favorites_scroll';
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: [

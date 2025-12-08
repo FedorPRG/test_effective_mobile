@@ -24,26 +24,33 @@ class CharacterCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Изображение персонажа
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: CachedNetworkImage(
-                imageUrl: character.image,
-                width: 80,
-                height: 80,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  width: 80,
-                  height: 80,
-                  color: Colors.grey[200],
-                  child: const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
+            Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: CachedNetworkImage(
+                  imageUrl: character.image,
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    width: 100,
+                    height: 100,
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   ),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  width: 80,
-                  height: 80,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.person, size: 40, color: Colors.grey),
+                  errorWidget: (context, url, error) => Container(
+                    width: 100,
+                    height: 100,
+                    color: Colors.grey[300],
+                    child: const Icon(
+                      Icons.person,
+                      size: 40,
+                      color: Colors.grey,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -121,7 +128,7 @@ class CharacterCard extends StatelessWidget {
               icon: Icon(
                 character.isFavorite ? Icons.star : Icons.star_border,
                 color: Colors.amber,
-                size: 28,
+                size: 38,
               ),
             ),
           ],
