@@ -14,3 +14,8 @@ class CharacterLoadEvent extends CharacterEvent {
 class CharacterLoadMoreEvent extends CharacterEvent {
   const CharacterLoadMoreEvent();
 }
+
+class CharacterClickFavorite extends CharacterEvent {
+  final int idCharacter;
+  const CharacterClickFavorite({required this.idCharacter});
+}

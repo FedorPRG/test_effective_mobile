@@ -1,10 +1,16 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:test_effective_mobile/models/character.dart';
 
 class CharacterCard extends StatelessWidget {
   final Character character;
+  final Function clickFavorite;
 
-  const CharacterCard({super.key, required this.character});
+  const CharacterCard({
+    super.key,
+    required this.character,
+    required this.clickFavorite,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,23 +26,25 @@ class CharacterCard extends StatelessWidget {
             // Изображение персонажа
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                character.image,
+              child: CachedNetworkImage(
+                imageUrl: character.image,
                 width: 80,
                 height: 80,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 80,
-                    height: 80,
-                    color: Colors.grey[300],
-                    child: const Icon(
-                      Icons.person,
-                      size: 40,
-                      color: Colors.grey,
-                    ),
-                  );
-                },
+                placeholder: (context, url) => Container(
+                  width: 80,
+                  height: 80,
+                  color: Colors.grey[200],
+                  child: const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  width: 80,
+                  height: 80,
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.person, size: 40, color: Colors.grey),
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -108,11 +116,10 @@ class CharacterCard extends StatelessWidget {
             // Кнопка "звездочка" для избранного
             IconButton(
               onPressed: () {
-                // Логика добавления/удаления из избранного
+                clickFavorite();
               },
               icon: Icon(
-                Icons.star_border, // Пустая звезда - не в избранном
-                // Icons.star, // Заполненная звезда - в избранном
+                character.isFavorite ? Icons.star : Icons.star_border,
                 color: Colors.amber,
                 size: 28,
               ),
