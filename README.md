@@ -14,3 +14,84 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+# Rick and Morty
+
+## Описание проекта
+
+Мобильное приложение для просмотра персонажей вселенной "Rick and Morty". Приложение предоставляет возможность просматривать список всех персонажей, добавлять их в избранное, сортировать избранное по различным параметрам и переключаться между светлой и темной темами.
+
+Ключевые особенности:
+- Просмотр всех персонажей с бесконечной прокруткой и пагинацией
+- Система избранного с локальным сохранением состояния
+- Поддержка темной и светлой темы с переключением в реальном времени
+- Плавные анимации переключения избранного и удаления элементов
+- Сортировка избранных по 5 параметрам (имя, статус, вид, пол, ID)
+- Офлайн-режим с интеллектуальным кешированием данных
+- Быстрый поиск и фильтрация персонажей
+- Адаптивный дизайн для различных размеров экрана
+
+Технологический стек:
+- Flutter 3.10.3+
+- State Management: flutter_bloc
+- Навигация: go_router
+- HTTP-клиент: dio
+- Локальное хранилище: shared_preferences
+- Кеширование изображений: cached_network_image
+- Утилиты: equatable
+
+Системные требования:
+- Flutter SDK: версия 3.10.3 или выше
+- Dart SDK: версия 3.0 или выше
+- Операционная система: Windows, macOS или Linux для разработки
+- Целевые платформы: Android 5.0+ или iOS 11.0+
+
+Зависимости:
+- flutter: ^3.10.3
+- cupertino_icons: ^1.0.8
+- dio: ^5.9.0
+- flutter_bloc: ^9.1.1
+- equatable: ^2.0.7
+- go_router: ^17.0.0
+- shared_preferences: ^2.5.3
+- cached_network_image: ^3.4.1
+
+## Инструкция по сборке и запуску
+
+### Требования:
+
+- Установленный Flutter SDK (версия 3.10.3 или выше)
+
+- Настроенные переменные окружения PATH
+
+- Android Studio (для эмулятора) или подключенное Android/iOS устройство
+
+### Шаг 1: Клонируйте репозиторий
+
+git clone https://github.com/FedorPRG/test_effective_mobile.git
+
+### Шаг 2: Перейдите в директорию проекта
+
+cd test_effective_mobile
+
+### Шаг 3: Установите зависимости
+
+flutter pub get
+
+### Шаг 4: Соберите проект
+
+flutter build apk --release
+
+### Шаг 5: Запустите проект
+
+#### Вариант A: Установите на Android-устройство
+
+- Скопируйте файл build/app/outputs/flutter-apk/app-release.apk на телефон
+
+- Откройте файл и установите приложение
+
+#### Вариант Б: Запустите через Flutter
+
+flutter run
+
+Приложение запустится на подключенном Android/iOS устройстве или эмуляторе
