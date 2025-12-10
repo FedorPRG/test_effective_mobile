@@ -1,40 +1,48 @@
 import 'package:equatable/equatable.dart';
 import 'package:test_effective_mobile/models/character.dart';
 
-abstract class CharacterState extends Equatable {
-  const CharacterState();
-
-  @override
-  List<Object> get props => [];
-}
-
-class CharacterChange extends CharacterState {
+class CharacterState extends Equatable {
   final List<Character> characters;
+  final List<Character> favoriteCharacters;
   final int currentPage;
   final bool hasMore;
   final bool isLoading;
+  final bool isFavoritesLoading;
 
-  const CharacterChange({
+  const CharacterState({
     required this.characters,
+    required this.favoriteCharacters,
     required this.currentPage,
     required this.hasMore,
     required this.isLoading,
+    required this.isFavoritesLoading,
   });
 
-  CharacterChange copyWith({
+  CharacterState copyWith({
     List<Character>? characters,
+    List<Character>? favoriteCharacters,
     int? currentPage,
     bool? hasMore,
     bool? isLoading,
+    bool? isFavoritesLoading,
   }) {
-    return CharacterChange(
+    return CharacterState(
       characters: characters ?? this.characters,
+      favoriteCharacters: favoriteCharacters ?? this.favoriteCharacters,
       currentPage: currentPage ?? this.currentPage,
       hasMore: hasMore ?? this.hasMore,
       isLoading: isLoading ?? this.isLoading,
+      isFavoritesLoading: isFavoritesLoading ?? this.isFavoritesLoading,
     );
   }
 
   @override
-  List<Object> get props => [characters, currentPage, hasMore, isLoading];
+  List<Object> get props => [
+    characters,
+    favoriteCharacters,
+    currentPage,
+    hasMore,
+    isLoading,
+    isFavoritesLoading,
+  ];
 }

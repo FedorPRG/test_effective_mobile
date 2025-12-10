@@ -4,9 +4,96 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test_effective_mobile/models/character.dart';
 
 class CacheService {
+  // Ключи
   static const String _pagesKey = 'cached_pages';
+  static const String _favoriteCharactersKey = 'favorite_characters';
 
-  // Сохранить одну страницу в кеш
+  // ========== ИЗБРАННЫЕ ПЕРСОНАЖИ ==========
+
+  // Сохранить персонажа в избранные
+  static Future<void> saveFavoriteCharacter(Character character) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final allFavorites = await _getAllFavoriteCharacters(prefs);
+
+      // Сохраняем полного персонажа
+      allFavorites[character.id.toString()] = character.toJson();
+
+      await prefs.setString(_favoriteCharactersKey, json.encode(allFavorites));
+      log('✅ Персонаж ${character.id} добавлен в избранные');
+    } catch (e) {
+      log('❌ Ошибка сохранения избранного персонажа: $e');
+    }
+  }
+
+  // Удалить персонажа из избранных
+  static Future<void> removeFavoriteCharacter(int characterId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final allFavorites = await _getAllFavoriteCharacters(prefs);
+
+      allFavorites.remove(characterId.toString());
+
+      await prefs.setString(_favoriteCharactersKey, json.encode(allFavorites));
+      log('✅ Персонаж $characterId удален из избранных');
+    } catch (e) {
+      log('❌ Ошибка удаления избранного персонажа: $e');
+    }
+  }
+
+  // Получить ВСЕХ избранных персонажей
+  static Future<List<Character>> getAllFavoriteCharacters() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final allFavorites = await _getAllFavoriteCharacters(prefs);
+
+      final List<Character> favorites = [];
+
+      allFavorites.forEach((key, value) {
+        if (value is Map<String, dynamic>) {
+          favorites.add(Character.fromJson(value));
+        }
+      });
+
+      log('✅ Загружено ${favorites.length} избранных персонажей');
+      return favorites;
+    } catch (e) {
+      log('❌ Ошибка загрузки избранных персонажей: $e');
+      return [];
+    }
+  }
+
+  // Проверить, является ли избранным
+  static Future<bool> isFavorite(int characterId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final allFavorites = await _getAllFavoriteCharacters(prefs);
+      return allFavorites.containsKey(characterId.toString());
+    } catch (e) {
+      log('❌ Ошибка проверки избранного: $e');
+      return false;
+    }
+  }
+
+  // Вспомогательный метод
+  static Future<Map<String, dynamic>> _getAllFavoriteCharacters(
+    SharedPreferences prefs,
+  ) async {
+    try {
+      final jsonString = prefs.getString(_favoriteCharactersKey);
+      if (jsonString == null || jsonString.isEmpty) {
+        return {};
+      }
+      final decoded = json.decode(jsonString);
+      return decoded is Map<String, dynamic> ? decoded : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  // ========== ВСЕ ПЕРСОНАЖИ ==========
+
+  //сохранить страницу в кеш
   static Future<void> savePage({
     required int page,
     required List<Character> characters,
@@ -15,11 +102,10 @@ class CacheService {
       final prefs = await SharedPreferences.getInstance();
       final allPages = await _getAllPages(prefs);
 
-      // Сохраняем персонажей с их текущим состоянием isFavorite
       allPages[page.toString()] = characters.map((c) => c.toJson()).toList();
 
       await prefs.setString(_pagesKey, json.encode(allPages));
-      log('✅ Страница $page сохранена в кеш (${characters.length} персонажей)');
+      log('✅ Страница $page сохранена в кеш');
     } catch (e) {
       log('❌ Ошибка сохранения страницы $page: $e');
     }
@@ -43,9 +129,7 @@ class CacheService {
         }
       }
 
-      log(
-        '✅ Страница $page загружена из кеша (${characters.length} персонажей)',
-      );
+      log('✅ Страница $page загружена из кеша');
       return characters;
     } catch (e) {
       log('❌ Ошибка загрузки страницы $page: $e');
@@ -64,42 +148,7 @@ class CacheService {
     }
   }
 
-  // Обновить состояние избранного для одного персонажа во всех страницах
-  static Future<void> updateFavoriteStatus(
-    int characterId,
-    bool isFavorite,
-  ) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final allPages = await _getAllPages(prefs);
-      bool updated = false;
-
-      for (final pageKey in allPages.keys) {
-        final pageData = allPages[pageKey] as List;
-        final updatedPageData = <Map<String, dynamic>>[];
-
-        for (final item in pageData) {
-          final Map<String, dynamic> charData = Map<String, dynamic>.from(item);
-          if (charData['id'] == characterId) {
-            charData['isFavorite'] = isFavorite;
-            updated = true;
-          }
-          updatedPageData.add(charData);
-        }
-
-        allPages[pageKey] = updatedPageData;
-      }
-
-      if (updated) {
-        await prefs.setString(_pagesKey, json.encode(allPages));
-        log('✅ Избранное обновлено для персонажа ID: $characterId');
-      }
-    } catch (e) {
-      log('❌ Ошибка обновления избранного: $e');
-    }
-  }
-
-  // получить все страницы
+  // получить все страницы из кеша
   static Future<Map<String, dynamic>> _getAllPages(
     SharedPreferences prefs,
   ) async {

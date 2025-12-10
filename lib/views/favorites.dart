@@ -27,6 +27,15 @@ class FavoritesState extends State<Favorites> {
   final Map<int, Timer> _removalTimers = {};
 
   @override
+  void initState() {
+    super.initState();
+    // Загружаем избранные при открытии экрана
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CharacterBloc>().add(const FavoritesLoadEvent());
+    });
+  }
+
+  @override
   void dispose() {
     // Отменяем все активные таймеры
     for (final timer in _removalTimers.values) {
@@ -53,6 +62,7 @@ class FavoritesState extends State<Favorites> {
         });
       }
     });
+
     _removalTimers[characterId] = timer;
   }
 
@@ -116,99 +126,99 @@ class FavoritesState extends State<Favorites> {
         Expanded(
           child: BlocBuilder<CharacterBloc, CharacterState>(
             builder: (context, state) {
-              final characterState = state as CharacterChange;
-
-              // Фильтрация и сортировка
-              List<Character> favoriteCharacters = characterState.characters
-                  .where((character) => character.isFavorite)
-                  .toList();
-
-              favoriteCharacters.sort((a, b) {
-                int result = 0;
-                switch (_currentSort) {
-                  case 'name':
-                    result = a.name.compareTo(b.name);
-                    break;
-                  case 'status':
-                    result = a.status.compareTo(b.status);
-                    break;
-                  case 'species':
-                    result = a.species.compareTo(b.species);
-                    break;
-                  case 'gender':
-                    result = a.gender.compareTo(b.gender);
-                    break;
-                  case 'id':
-                    result = a.id.compareTo(b.id);
-                    break;
-                  default:
-                    result = a.name.compareTo(b.name);
-                }
-                return _ascending ? result : -result;
-              });
-
-              // Обработка пустого списка
-              if (favoriteCharacters.isEmpty) {
+              if (state.isFavoritesLoading) {
                 return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.star_border,
-                        size: 64,
-                        color: theme.disabledColor,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Нет избранных персонажей',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: theme.disabledColor,
-                        ),
-                      ),
-                    ],
+                  child: CircularProgressIndicator(
+                    color: theme.colorScheme.primary,
                   ),
                 );
               }
 
-              // Отображение списка
-              return ListView.builder(
-                key: const PageStorageKey(_pageStorageKey),
-                controller: _scrollController,
-                padding: const EdgeInsets.all(16),
-                itemCount: favoriteCharacters.length,
-                itemBuilder: (context, index) {
-                  final character = favoriteCharacters[index];
-                  final isRemoving = _removingItems.contains(character.id);
-
-                  // анимация исчезновения
-                  return AnimatedOpacity(
-                    duration: const Duration(milliseconds: 600),
-                    opacity: isRemoving ? 0 : 1,
-                    child: CharacterCard(
-                      character: character,
-                      clickFavorite: () {
-                        // Запускаем анимацию
-                        _animateRemoval(character.id);
-
-                        // Удаляем через небольшую задержку для анимации
-                        Future.delayed(const Duration(milliseconds: 400), () {
-                          if (mounted) {
-                            context.read<CharacterBloc>().add(
-                              CharacterClickFavorite(idCharacter: character.id),
-                            );
-                          }
-                        });
-                      },
-                      withPulseAnimation: false,
-                    ),
-                  );
-                },
-              );
+              return _buildContent(state.favoriteCharacters, theme);
             },
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildContent(List<Character> favoriteCharacters, ThemeData theme) {
+    // Сортируем
+    final sortedCharacters = List<Character>.from(favoriteCharacters);
+    sortedCharacters.sort((a, b) {
+      int result = 0;
+      switch (_currentSort) {
+        case 'name':
+          result = a.name.compareTo(b.name);
+          break;
+        case 'status':
+          result = a.status.compareTo(b.status);
+          break;
+        case 'species':
+          result = a.species.compareTo(b.species);
+          break;
+        case 'gender':
+          result = a.gender.compareTo(b.gender);
+          break;
+        case 'id':
+          result = a.id.compareTo(b.id);
+          break;
+        default:
+          result = a.name.compareTo(b.name);
+      }
+      return _ascending ? result : -result;
+    });
+
+    // Обработка пустого списка
+    if (sortedCharacters.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.star_border, size: 64, color: theme.disabledColor),
+            const SizedBox(height: 16),
+            Text(
+              'Нет избранных персонажей',
+              style: TextStyle(fontSize: 18, color: theme.disabledColor),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Отображение списка
+    return ListView.builder(
+      key: const PageStorageKey(_pageStorageKey),
+      controller: _scrollController,
+      padding: const EdgeInsets.all(16),
+      itemCount: sortedCharacters.length,
+      itemBuilder: (context, index) {
+        final character = sortedCharacters[index];
+        final isRemoving = _removingItems.contains(character.id);
+
+        // анимация исчезновения
+        return AnimatedOpacity(
+          duration: const Duration(milliseconds: 600),
+          opacity: isRemoving ? 0 : 1,
+          child: CharacterCard(
+            character: character,
+            clickFavorite: () {
+              // Запускаем анимацию
+              _animateRemoval(character.id);
+
+              // Удаляем через небольшую задержку для анимации
+              Future.delayed(const Duration(milliseconds: 400), () {
+                if (mounted) {
+                  context.read<CharacterBloc>().add(
+                    FavoriteRemoveEvent(characterId: character.id),
+                  );
+                }
+              });
+            },
+            withPulseAnimation: false,
+          ),
+        );
+      },
     );
   }
 }

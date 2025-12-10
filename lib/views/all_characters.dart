@@ -32,7 +32,7 @@ class AllCharactersState extends State<AllCharacters> {
   void _onScroll() {
     if (_scrollController.position.pixels ==
         _scrollController.position.maxScrollExtent) {
-      final state = context.read<CharacterBloc>().state as CharacterChange;
+      final state = context.read<CharacterBloc>().state;
       if (!state.isLoading && state.hasMore) {
         context.read<CharacterBloc>().add(const CharacterLoadMoreEvent());
       }
@@ -43,10 +43,8 @@ class AllCharactersState extends State<AllCharacters> {
   Widget build(BuildContext context) {
     return BlocBuilder<CharacterBloc, CharacterState>(
       builder: (context, state) {
-        final characterState = state as CharacterChange;
-
         // Если идет первая загрузка и список пустой
-        if (characterState.isLoading && characterState.characters.isEmpty) {
+        if (state.isLoading && state.characters.isEmpty) {
           return Center(
             child: CircularProgressIndicator(
               color: Theme.of(context).colorScheme.primary,
@@ -59,12 +57,10 @@ class AllCharactersState extends State<AllCharacters> {
           key: const PageStorageKey(_pageStorageKey),
           controller: _scrollController,
           padding: const EdgeInsets.all(16),
-          itemCount:
-              characterState.characters.length +
-              (characterState.hasMore ? 1 : 0),
+          itemCount: state.characters.length + (state.hasMore ? 1 : 0),
           itemBuilder: (context, index) {
-            if (index == characterState.characters.length) {
-              if (characterState.isLoading) {
+            if (index == state.characters.length) {
+              if (state.isLoading) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Center(
@@ -77,11 +73,11 @@ class AllCharactersState extends State<AllCharacters> {
               return const SizedBox();
             }
             return CharacterCard(
-              character: characterState.characters[index],
+              character: state.characters[index],
               clickFavorite: () {
                 context.read<CharacterBloc>().add(
                   CharacterClickFavorite(
-                    idCharacter: characterState.characters[index].id,
+                    idCharacter: state.characters[index].id,
                   ),
                 );
               },
